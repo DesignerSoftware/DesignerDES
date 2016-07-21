@@ -58,7 +58,7 @@ public class ControladorPrimerIngreso implements Serializable {
             requerirPreguntasSeguridad();
         } catch (NumberFormatException e) {
             System.out.println("Error postconstruct. Texto no esta en formato numérico.");
-            System.out.println(this.getClass().getName() + ": "+ e);
+            System.out.println(this.getClass().getName() + ": " + e);
             System.out.println("Causa: " + e.getCause());
         } catch (ELException e) {
             System.out.println("Error postconstruct " + this.getClass().getName() + ": " + e);
@@ -91,10 +91,12 @@ public class ControladorPrimerIngreso implements Serializable {
             if (clave.equals(confirmacion)) {
                 if (validarClave(clave)) {
                     nuevoIngreso.setEmpleado(administrarPrimerIngreso.consultarEmpleado(new BigInteger(usuario)));
-                    nuevoIngreso.setPwd(administrarPrimerIngreso.encriptar(clave));
-                    byte[] rsp1, rsp2;
-                    nuevoIngreso.setRespuesta1(administrarPrimerIngreso.encriptar(nuevoIngreso.getRespuesta1UI().toUpperCase()));
-                    nuevoIngreso.setRespuesta2(administrarPrimerIngreso.encriptar(nuevoIngreso.getRespuesta2UI().toUpperCase()));
+                    //nuevoIngreso.setPwd(administrarPrimerIngreso.encriptar(clave));
+                    nuevoIngreso.setPwd(clave);
+                    //nuevoIngreso.setRespuesta1(administrarPrimerIngreso.encriptar(nuevoIngreso.getRespuesta1UI().toUpperCase()));
+                    nuevoIngreso.setRespuesta1(nuevoIngreso.getRespuesta1UI().toUpperCase());
+                    //nuevoIngreso.setRespuesta2(administrarPrimerIngreso.encriptar(nuevoIngreso.getRespuesta2UI().toUpperCase()));
+                    nuevoIngreso.setRespuesta2(nuevoIngreso.getRespuesta2UI().toUpperCase());
                     nuevoIngreso.setActivo("S");
                     nuevoIngreso.setUltimaconexion(new Date());
                     nuevoIngreso.setEnviocorreo("N");
@@ -197,5 +199,5 @@ public class ControladorPrimerIngreso implements Serializable {
     public void setPc(ParametrizaClave pc) {
         this.pc = pc;
     }
-    
+
 }

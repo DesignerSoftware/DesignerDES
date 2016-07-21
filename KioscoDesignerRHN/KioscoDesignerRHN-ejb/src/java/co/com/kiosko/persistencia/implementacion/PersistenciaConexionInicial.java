@@ -1,7 +1,7 @@
 package co.com.kiosko.persistencia.implementacion;
 
 import co.com.kiosko.persistencia.interfaz.IPersistenciaConexionInicial;
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -13,7 +13,8 @@ public class PersistenciaConexionInicial implements IPersistenciaConexionInicial
     @Override
     public void setearKiosko(EntityManager eManager) {
         eManager.getTransaction().begin();
-        String sqlQuery = "SET ROLE ROLKIOSKO IDENTIFIED BY RLKSK";
+        //String sqlQuery = "SET ROLE ROLKIOSKO IDENTIFIED BY RLKSK";
+        String sqlQuery = "SET ROLE 'ROLKIOSKO'";
         Query query = eManager.createNativeQuery(sqlQuery);
         query.executeUpdate();
         eManager.getTransaction().commit();
@@ -25,12 +26,11 @@ public class PersistenciaConexionInicial implements IPersistenciaConexionInicial
             eManager.getTransaction().begin();
             String sqlQuery = "SELECT COUNT(*) FROM EMPLEADOS e, Empresas em WHERE e.empresa = em.secuencia AND e.codigoempleado = ? AND em.nit = ?";
             Query query = eManager.createNativeQuery(sqlQuery);
-            query.setParameter(1, usuario);
-            query.setParameter(2, nitEmpresa);
-            BigDecimal retorno = (BigDecimal) query.getSingleResult();
-            Integer instancia = retorno.intValueExact();
+            query.setParameter(1, new BigInteger(usuario));
+            query.setParameter(2, new Long(nitEmpresa));
+            Long retorno = (Long) query.getSingleResult();
             eManager.getTransaction().commit();
-            if (instancia > 0) {
+            if (retorno > 0) {
                 //System.out.println("El usuario existe y corresponde a la empresa seleccionada.");
                 return true;
             } else {
@@ -50,17 +50,12 @@ public class PersistenciaConexionInicial implements IPersistenciaConexionInicial
             eManager.getTransaction().begin();
             String sqlQuery = "SELECT COUNT(*) FROM CONEXIONESKIOSKOS ck, EMPLEADOS e WHERE ck.EMPLEADO = e.SECUENCIA AND e.codigoempleado = ?";
             Query query = eManager.createNativeQuery(sqlQuery);
-            query.setParameter(1, usuario);
-            BigDecimal retorno = (BigDecimal) query.getSingleResult();
-            Integer instancia = retorno.intValueExact();
+            query.setParameter(1, new BigInteger(usuario));
+            Long retorno = (Long) query.getSingleResult();
             eManager.getTransaction().commit();
-            if (instancia > 0) {
-                //System.out.println("El usuario está registrado.");
-                return true;
-            } else {
-                //System.out.println("El usuario no esta registrado");
-                return false;
-            }
+            return retorno > 0; 
+            //System.out.println("El usuario está registrado.");
+            //System.out.println("El usuario no esta registrado");
         } catch (Exception e) {
             System.out.println("Error PersistenciaConexionInicial.validarUsuarioRegistrado: " + e);
             return false;
@@ -73,17 +68,12 @@ public class PersistenciaConexionInicial implements IPersistenciaConexionInicial
             eManager.getTransaction().begin();
             String sqlQuery = "SELECT COUNT(*) FROM CONEXIONESKIOSKOS ck, EMPLEADOS e WHERE ck.EMPLEADO = e.SECUENCIA AND e.codigoempleado = ? AND ck.activo = 'N'";
             Query query = eManager.createNativeQuery(sqlQuery);
-            query.setParameter(1, usuario);
-            BigDecimal retorno = (BigDecimal) query.getSingleResult();
-            Integer instancia = retorno.intValueExact();
+            query.setParameter(1, new BigInteger(usuario));
+            Long retorno = (Long) query.getSingleResult();
             eManager.getTransaction().commit();
-            if (instancia > 0) {
-                //System.out.println("El usuario esta bloqueado.");
-                return false;
-            } else {
-                //System.out.println("El usuario esta activo");
-                return true;
-            }
+            return retorno <= 0;
+            //System.out.println("El usuario esta bloqueado.");
+            //System.out.println("El usuario esta activo");
         } catch (Exception e) {
             System.out.println("Error PersistenciaConexionInicial.validarEstadoUsuario: " + e);
             return false;
@@ -94,20 +84,17 @@ public class PersistenciaConexionInicial implements IPersistenciaConexionInicial
     public boolean validarIngresoUsuarioRegistrado(EntityManager eManager, String usuario, String clave) {
         try {
             eManager.getTransaction().begin();
-            String sqlQuery = "SELECT COUNT(*) FROM CONEXIONESKIOSKOS ck, EMPLEADOS e WHERE ck.EMPLEADO = e.SECUENCIA AND e.codigoempleado = ? AND ck.PWD = GENERALES_PKG.ENCRYPT(?)";
+            //String sqlQuery = "SELECT COUNT(*) FROM CONEXIONESKIOSKOS ck, EMPLEADOS e WHERE ck.EMPLEADO = e.SECUENCIA AND e.codigoempleado = ? AND ck.PWD = GENERALES_PKG.ENCRYPT(?)";
+            String sqlQuery = "SELECT COUNT(*) FROM CONEXIONESKIOSKOS ck, EMPLEADOS e WHERE ck.EMPLEADO = e.SECUENCIA AND e.codigoempleado = ? AND ck.PWD = crypt(?, ck.PWD)";
+            //SELECT 'x' AS pswmatch FROM CIUDADES WHERE psw = crypt('holanda', psw);
             Query query = eManager.createNativeQuery(sqlQuery);
-            query.setParameter(1, usuario);
+            query.setParameter(1, new BigInteger(usuario));
             query.setParameter(2, clave);
-            BigDecimal retorno = (BigDecimal) query.getSingleResult();
-            Integer instancia = retorno.intValueExact();
+            Long retorno = (Long) query.getSingleResult();
             eManager.getTransaction().commit();
-            if (instancia > 0) {
-                //System.out.println("El usuario y clave son correctos.");
-                return true;
-            } else {
-                //System.out.println("El usuario o clave son incorrectos");
-                return false;
-            }
+            return retorno > 0; 
+            //System.out.println("El usuario y clave son correctos.");
+            //System.out.println("El usuario o clave son incorrectos");
         } catch (Exception e) {
             System.out.println("Error PersistenciaConexionInicial.validarIngresoUsuarioRegistrado: " + e);
             return false;

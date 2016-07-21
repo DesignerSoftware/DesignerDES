@@ -6,7 +6,6 @@ import co.com.kiosko.administrar.interfaz.IAdministrarOlvidoClave;
 import co.com.kiosko.administrar.interfaz.IAdministrarSesiones;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaConexionesKioskos;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaParametrizaClave;
-import co.com.kiosko.persistencia.interfaz.IPersistenciaUtilidadesBD;
 import javax.ejb.EJB;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -23,8 +22,6 @@ public class AdministrarOlvidoClave implements IAdministrarOlvidoClave {
     @EJB
     private IPersistenciaConexionesKioskos persistenciaConexionesKioskos;
     @EJB
-    private IPersistenciaUtilidadesBD persistenciaUtilidadesBD;
-    @EJB
     private IPersistenciaParametrizaClave persistenciaParametrizaClave;
     private EntityManager em;
 
@@ -39,22 +36,8 @@ public class AdministrarOlvidoClave implements IAdministrarOlvidoClave {
     }
 
     @Override
-    public boolean validarRespuestas(String respuesta1, String respuesta2, byte[] respuestaC1, byte[] respuestaC2) {
-        if (respuesta1.toUpperCase().equals(persistenciaUtilidadesBD.desencriptar(em, respuestaC1))
-                && respuesta2.toUpperCase().equals(persistenciaUtilidadesBD.desencriptar(em, respuestaC2))) {
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public byte[] encriptar(String valor) {
-        return persistenciaUtilidadesBD.encriptar(em, valor);
-    }
-
-    @Override
-    public String desEncriptar(byte[] valor) {
-        return persistenciaUtilidadesBD.desencriptar(em, valor);
+    public boolean validarRespuestas(String respuesta1, String respuesta2, String codigoEmpleado, String nitEmpresa) {
+        return persistenciaConexionesKioskos.validarRespuestas(em, respuesta1, respuesta2, codigoEmpleado, nitEmpresa);
     }
 
     @Override
@@ -65,5 +48,10 @@ public class AdministrarOlvidoClave implements IAdministrarOlvidoClave {
     @Override
     public ParametrizaClave obtenerFormatoClave(long nitEmpresa) {
         return persistenciaParametrizaClave.obtenerFormatoClave(em, nitEmpresa);
+    }
+    
+    @Override
+    public boolean validarClave(String pwd, String codigoEmpleado, String nitEmpresa) {
+        return persistenciaConexionesKioskos.validarClave(em, pwd, codigoEmpleado, nitEmpresa);
     }
 }

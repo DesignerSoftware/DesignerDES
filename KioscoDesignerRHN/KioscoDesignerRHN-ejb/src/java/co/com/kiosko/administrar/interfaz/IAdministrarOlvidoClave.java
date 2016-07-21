@@ -10,15 +10,12 @@ public interface IAdministrarOlvidoClave {
 
     public co.com.kiosko.entidades.ConexionesKioskos obtenerConexionEmpleado(java.lang.String codigoEmpleado, String nitEmpresa);
 
-    public boolean validarRespuestas(java.lang.String respuesta1, java.lang.String respuesta2, byte[] respuestaC1, byte[] respuestaC2);
+    public boolean validarRespuestas(String respuesta1, String respuesta2, String codigoEmpleado, String nitEmpresa);
 
     public boolean cambiarClave(co.com.kiosko.entidades.ConexionesKioskos ck);
 
-    public byte[] encriptar(java.lang.String valor);
-
-    public java.lang.String desEncriptar(byte[] valor);
-
     public co.com.kiosko.entidades.ParametrizaClave obtenerFormatoClave(long nitEmpresa);
-    
-    
+
+    public boolean validarClave(String pwd, String codigoEmpleado, String nitEmpresa);
+
 }

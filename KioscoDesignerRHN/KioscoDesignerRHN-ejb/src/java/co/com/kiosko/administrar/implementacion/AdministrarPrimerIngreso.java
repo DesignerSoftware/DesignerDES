@@ -10,7 +10,6 @@ import co.com.kiosko.persistencia.interfaz.IPersistenciaConexionesKioskos;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaEmpleados;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaParametrizaClave;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaPreguntasKioskos;
-import co.com.kiosko.persistencia.interfaz.IPersistenciaUtilidadesBD;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
@@ -33,8 +32,6 @@ public class AdministrarPrimerIngreso implements IAdministrarPrimerIngreso {
     private IPersistenciaConexionesKioskos persistenciaConexionesKioskos;
     @EJB
     private IPersistenciaEmpleados persistenciaEmpleados;
-    @EJB
-    private IPersistenciaUtilidadesBD persistenciaUtilidadesBD;
     @EJB
     private IPersistenciaParametrizaClave persistenciaParametrizaClave;
     private EntityManager em;
@@ -62,16 +59,6 @@ public class AdministrarPrimerIngreso implements IAdministrarPrimerIngreso {
     @Override
     public Empleados consultarEmpleado(BigInteger codigoEmpleado) {
         return persistenciaEmpleados.consultarEmpleado(em, codigoEmpleado);
-    }
-
-    @Override
-    public byte[] encriptar(String valor) {
-        return persistenciaUtilidadesBD.encriptar(em, valor);
-    }
-
-    @Override
-    public String desencriptar(byte[] valor) {
-        return persistenciaUtilidadesBD.desencriptar(em, valor);
     }
 
     @Override

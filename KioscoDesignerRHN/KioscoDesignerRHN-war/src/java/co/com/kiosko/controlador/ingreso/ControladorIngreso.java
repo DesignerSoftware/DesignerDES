@@ -46,7 +46,7 @@ public class ControladorIngreso implements Serializable {
     }
 
     public String ingresar() throws IOException {
-        String retorno=null;
+        String retorno = null;
         FacesContext contexto = FacesContext.getCurrentInstance();
         HttpSession ses = (HttpSession) contexto.getExternalContext().getSession(false);
         if (!ingresoExitoso) {
@@ -75,8 +75,8 @@ public class ControladorIngreso implements Serializable {
                                     administrarIngreso.modificarUltimaConexion(conexionEmpleado);
                                     HttpSession session = Util.getSession();
                                     session.setAttribute("idUsuario", usuario);
-                                    if (session != null){
-                                        System.out.println("Conectado a: "+session.getId());
+                                    if (session != null) {
+                                        System.out.println("Conectado a: " + session.getId());
                                     }
                                     //return "opcionesKiosko";
                                     //return "plantilla";
@@ -136,7 +136,9 @@ public class ControladorIngreso implements Serializable {
             conexionEmpleado = null;
             nit = null;
             HttpSession session = Util.getSession();
-            session.invalidate();
+            if (session != null) {
+                session.invalidate();
+            }
 
             FacesContext context = FacesContext.getCurrentInstance();
             ExternalContext ec = context.getExternalContext();

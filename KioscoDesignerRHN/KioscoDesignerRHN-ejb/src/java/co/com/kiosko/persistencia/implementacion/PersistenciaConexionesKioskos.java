@@ -51,4 +51,41 @@ public class PersistenciaConexionesKioskos implements IPersistenciaConexionesKio
             return null;
         }
     }
+
+    @Override
+    public boolean validarRespuestas(EntityManager eManager, String respuesta1, String respuesta2, String codigoEmpleado, String nitEmpresa) {
+        try {
+            eManager.getTransaction().begin();
+            String sqlQuery = "SELECT COUNT(ck.*) FROM ConexionesKioskos ck, Empleados e, Empresas em WHERE ck.empleado = e.secuencia AND e.empresa = em.secuencia AND e.codigoempleado = ? AND em.nit = ? and ck.respuesta1 = crypt(?, ck.respuesta1) and ck.respuesta2 = crypt(?, ck.respuesta2) ";
+            Query query = eManager.createNativeQuery(sqlQuery);
+            query.setParameter(1, new BigInteger(codigoEmpleado));
+            query.setParameter(2, new Long(nitEmpresa));
+            query.setParameter(3, respuesta1.toUpperCase());
+            query.setParameter(4, respuesta2.toUpperCase());
+            eManager.getTransaction().commit();
+            return (Long) query.getSingleResult() > 0;
+        } catch (Exception e) {
+            System.out.println("Error PersistenciaConexionesKioskos.validarRespuestas: " + e);
+            eManager.getTransaction().rollback();
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean validarClave(EntityManager eManager, String pwd, String codigoEmpleado, String nitEmpresa) {
+        try {
+            eManager.getTransaction().begin();
+            String sqlQuery = "SELECT COUNT(ck.*) FROM ConexionesKioskos ck, Empleados e, Empresas em WHERE ck.empleado = e.secuencia AND e.empresa = em.secuencia AND e.codigoempleado = ? AND em.nit = ? AND ck.pwd = crypt(?, ck.pwd) ";
+            Query query = eManager.createNativeQuery(sqlQuery);
+            query.setParameter(1, new BigInteger(codigoEmpleado));
+            query.setParameter(2, new Long(nitEmpresa));
+            query.setParameter(3, pwd);
+            eManager.getTransaction().commit();
+            return (Long) query.getSingleResult() > 0;
+        } catch (Exception e) {
+            System.out.println("Error PersistenciaConexionesKioskos.validarClave: " + e);
+            eManager.getTransaction().rollback();
+            return false;
+        }
+    }
 }

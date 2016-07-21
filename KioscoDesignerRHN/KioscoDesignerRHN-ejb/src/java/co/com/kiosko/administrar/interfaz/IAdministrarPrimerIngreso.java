@@ -16,10 +16,6 @@ public interface IAdministrarPrimerIngreso {
 
     public co.com.kiosko.entidades.Empleados consultarEmpleado(java.math.BigInteger codigoEmpleado);
 
-    public byte[] encriptar(java.lang.String valor);
-
-    public java.lang.String desencriptar(byte[] valor);
-
     public co.com.kiosko.entidades.ParametrizaClave obtenerFormatoClave(long nitEmpresa);
     
 }

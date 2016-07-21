@@ -58,11 +58,12 @@ public class ControladorOlvidoClave implements Serializable {
                 && clave != null && !clave.isEmpty()
                 && confirmacion != null && !confirmacion.isEmpty()) {
             if (administrarOlvidoClave.validarRespuestas(respuesta1, respuesta2,
-                    conexion.getRespuesta1(), conexion.getRespuesta2())) {
-                if (claveActual.equals(administrarOlvidoClave.desEncriptar(conexion.getPwd()))) {
+                    usuario, nit)) {
+                if (administrarOlvidoClave.validarClave(claveActual, usuario, nit)) {
                     if (clave.equals(confirmacion)) {
                         if (validarClave(clave)) {
-                            conexion.setPwd(administrarOlvidoClave.encriptar(clave));
+                            //conexion.setPwd(administrarOlvidoClave.encriptar(clave));
+                            conexion.setPwd(clave);
                             if (administrarOlvidoClave.cambiarClave(conexion)) {
                                 PrimefacesContextUI.ejecutar("PF('dlgProcesoFinalizado').show()");
                             }
@@ -87,10 +88,11 @@ public class ControladorOlvidoClave implements Serializable {
                 && clave != null && !clave.isEmpty()
                 && confirmacion != null && !confirmacion.isEmpty()) {
             if (administrarOlvidoClave.validarRespuestas(respuesta1, respuesta2,
-                    conexion.getRespuesta1(), conexion.getRespuesta2())) {
+                    usuario, nit)) {
                 if (clave.equals(confirmacion)) {
                     if (validarClave(clave)) {
-                        conexion.setPwd(administrarOlvidoClave.encriptar(clave));
+                        //conexion.setPwd(administrarOlvidoClave.encriptar(clave));
+                        conexion.setPwd(clave);
                         if (administrarOlvidoClave.cambiarClave(conexion)) {
                             PrimefacesContextUI.ejecutar("PF('dlgProcesoFinalizado').show()");
                         }

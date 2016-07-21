@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "CONEXIONESKIOSKOS")
 @XmlRootElement
-@NamedQueries({ 
+@NamedQueries({
     @NamedQuery(name = "ConexionesKioskos.findAll", query = "SELECT c FROM ConexionesKioskos c")})
 public class ConexionesKioskos implements Serializable {
 
@@ -31,16 +31,16 @@ public class ConexionesKioskos implements Serializable {
     private BigDecimal secuencia;
     @Lob
     @Column(name = "PWD")
-    private byte[] pwd;
+    private String pwd;
     @Size(max = 1)
     @Column(name = "ACTIVO")
     private String activo;
     @Size(max = 50)
     @Column(name = "RESPUESTA1")
-    private byte[] respuesta1;
+    private String respuesta1;
     @Size(max = 50)
     @Column(name = "RESPUESTA2")
-    private byte[] respuesta2;
+    private String respuesta2;
     @Column(name = "ULTIMACONEXION")
     @Temporal(TemporalType.TIMESTAMP)
     private Date ultimaconexion;
@@ -98,14 +98,6 @@ public class ConexionesKioskos implements Serializable {
         this.secuencia = secuencia;
     }
 
-    public byte[] getPwd() {
-        return pwd;
-    }
-
-    public void setPwd(byte[] pwd) {
-        this.pwd = pwd;
-    }
-
     public String getActivo() {
         return activo;
     }
@@ -114,19 +106,27 @@ public class ConexionesKioskos implements Serializable {
         this.activo = activo;
     }
 
-    public byte[] getRespuesta1() {
+    public String getPwd() {
+        return pwd;
+    }
+
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
+    }
+
+    public String getRespuesta1() {
         return respuesta1;
     }
 
-    public void setRespuesta1(byte[] respuesta1) {
+    public void setRespuesta1(String respuesta1) {
         this.respuesta1 = respuesta1;
     }
 
-    public byte[] getRespuesta2() {
+    public String getRespuesta2() {
         return respuesta2;
     }
 
-    public void setRespuesta2(byte[] respuesta2) {
+    public void setRespuesta2(String respuesta2) {
         this.respuesta2 = respuesta2;
     }
 
