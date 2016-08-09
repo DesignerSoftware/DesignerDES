@@ -8,10 +8,14 @@
     </h:head>
     <h:body>
         <h:form enctype="multipart/form-data">
-            <p:fileUpload fileUploadListener="#{controladorPruebas.handleFileUpload}" mode="advanced"
-                          update="messages" auto="true" sizeLimit="100000" allowTypes="/(\.|\/)(gif|jpe?g|png)$/" />
-
-            <p:growl id="messages" showDetail="true" />
+            <p:dataTable id="tblReporte" value="#{controladorGenerarReporte.reportes}" var="reporte">
+                <p:column headerText="Nombre archivo">
+                    <h:outputText value="#{reporte.nombre}"/>
+                </p:column>
+                <p:column width="35">
+                    <p:commandButton icon="ui-icon-search" actionListener="#{controladorGenerarReporte.verReporte(reporte.ruta)}"/>
+                </p:column>
+            </p:dataTable>
         </h:form>
     </h:body>
 </html>

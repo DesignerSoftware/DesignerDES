@@ -5,15 +5,19 @@ import co.com.kiosko.entidades.ConfiguracionCorreo;
 import co.com.kiosko.entidades.Generales;
 import co.com.kiosko.administrar.interfaz.IAdministrarGenerarReporte;
 import co.com.kiosko.administrar.interfaz.IAdministrarSesiones;
+import co.com.kiosko.clasesAyuda.ReporteGenerado;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaConexionesKioskos;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaConfiguracionCorreo;
 import co.com.kiosko.persistencia.interfaz.IPersistenciaGenerales;
 import co.com.kiosko.correo.EnvioCorreo;
 import co.com.kiosko.reportes.IniciarReporteInterface;
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import javax.ejb.EJB;
 import javax.ejb.Stateful;
@@ -44,46 +48,32 @@ public class AdministrarGenerarReporte implements IAdministrarGenerarReporte {
     }
 
     @Override
-    public String generarReporte(String nombreReporte, String tipoReporte, Map parametros) {
+    public List<ReporteGenerado> consultarReporte(String nombreDirectorio, String codigoEmpleado, Date fechaDesde, Date fechaHasta) {
         try {
             Generales general = persistenciaGenerales.consultarRutasGenerales(em);
-            String pathReporteGenerado = null;
-            BigDecimal secuenciaempleado = null;
-            String nombreArchivo;
-            if (general != null) {
-                if (parametros.containsKey("secuenciaempleado")) {
-                    secuenciaempleado = (BigDecimal) parametros.get("secuenciaempleado");
-                }
-                SimpleDateFormat formato = new SimpleDateFormat("yyyyMMddhhmmss");
-                String fechaActual = formato.format(new Date());
-                if (secuenciaempleado != null) {
-                    nombreArchivo = "KSK_" + nombreReporte + "_" + secuenciaempleado.toString() + "_" + fechaActual;
-                } else {
-                    nombreArchivo = "KSK_" + nombreReporte + "_" + fechaActual;
-                }
-                String rutaReporte = general.getPathreportes();
-                String rutaGenerado = general.getUbicareportes();
-                if (tipoReporte.equals("PDF")) {
-                    nombreArchivo = nombreArchivo + ".pdf";
-                } else if (tipoReporte.equals("XLSX")) {
-                    nombreArchivo = nombreArchivo + ".xlsx";
-                } else if (tipoReporte.equals("XLS")) {
-                    nombreArchivo = nombreArchivo + ".xls";
-                } else if (tipoReporte.equals("CSV")) {
-                    nombreArchivo = nombreArchivo + ".csv";
-                } else if (tipoReporte.equals("HTML")) {
-                    nombreArchivo = nombreArchivo + ".html";
-                } else if (tipoReporte.equals("DOCX")) {
-                    nombreArchivo = nombreArchivo + ".rtf";
-                }
+            String rutaReporte = general.getPathreportes();
+            List<ReporteGenerado> reportes = new ArrayList<ReporteGenerado>();
 
-                parametros.put("pathImagenes", rutaReporte);
-                pathReporteGenerado = reporte.ejecutarReporte(nombreReporte, rutaReporte, rutaGenerado, nombreArchivo, tipoReporte, parametros, em);
-                return pathReporteGenerado;
+            File folder = new File(rutaReporte + nombreDirectorio);
+            File[] listOfFiles = folder.listFiles();
+            SimpleDateFormat formato = new SimpleDateFormat("yyyyMMdd");
+            for (File listOfFile : listOfFiles) {
+                if (listOfFile.isFile()) {
+                    String archivo = listOfFile.getName();
+                    String archivoSinExt = archivo.substring(0, archivo.lastIndexOf("."));
+                    String fecha = archivoSinExt.substring(archivoSinExt.length() - 8);
+                    if (archivo.startsWith(codigoEmpleado)
+                            && (fechaDesde.compareTo(formato.parse(fecha)) <= 0 && fechaHasta.compareTo(formato.parse(fecha)) >= 0)) {
+                        ReporteGenerado infoReporte = new ReporteGenerado();
+                        infoReporte.setNombre(archivo);
+                        infoReporte.setRuta(rutaReporte + nombreDirectorio + File.separator + listOfFile.getName());
+                        reportes.add(infoReporte);
+                    }
+                }
             }
-            return pathReporteGenerado;
+            return reportes;
         } catch (Exception ex) {
-            System.out.println("Error AdministrarGenerarReporte.generarReporte: " + ex);
+            System.out.println("Error AdministrarGenerarReporte.consultarReporte: " + ex);
             return null;
         }
     }

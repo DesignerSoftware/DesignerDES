@@ -3,6 +3,7 @@ package co.com.kiosko.controlador.kiosko;
 import co.com.kiosko.entidades.ConexionesKioskos;
 import co.com.kiosko.entidades.OpcionesKioskos;
 import co.com.kiosko.administrar.interfaz.IAdministrarGenerarReporte;
+import co.com.kiosko.clasesAyuda.ReporteGenerado;
 import co.com.kiosko.controlador.ingreso.ControladorIngreso;
 import co.com.kiosko.utilidadesUI.MensajesUI;
 import co.com.kiosko.utilidadesUI.PrimefacesContextUI;
@@ -11,8 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.PostConstruct;
@@ -42,10 +42,11 @@ public class ControladorGenerarReporte implements Serializable {
     private ConexionesKioskos conexionEmpleado;
     private String email, areaDe;
     private ControladorIngreso controladorIngreso;
-    private String pathReporteGenerado;
     private StreamedContent reporteGenerado;
     private FileInputStream fis;
     private boolean enviocorreo;
+    private List<ReporteGenerado> reportes;
+    private String pathReporteSeleccionado;
     ExternalContext externalContext;
     String userAgent;
 
@@ -64,28 +65,24 @@ public class ControladorGenerarReporte implements Serializable {
             conexionEmpleado = controladorIngreso.getConexionEmpleado();
             reporte = ((ControladorOpcionesKiosko) x.getApplication().evaluateExpressionGet(x, "#{controladorOpcionesKiosko}", ControladorOpcionesKiosko.class)).getOpcionReporte();
             email = conexionEmpleado.getEmpleado().getPersona().getEmail();
-            //System.out.println("contexto: " + userAgent);
         } catch (ELException e) {
             System.out.println("Error postconstruct " + this.getClass().getName() + ": " + e.getMessage());
             System.out.println("Causa: " + e.getCause());
         }
     }
 
-    public void generarReporte() {
+    public void consultarReporte() {
         if (administrarGenerarReporte.modificarConexionKisko(conexionEmpleado)) {
             controladorIngreso.actualizarConexionEmpleado();
             conexionEmpleado = controladorIngreso.getConexionEmpleado();
-            Map parametros = new HashMap();
-            parametros.put("secuenciaempleado", conexionEmpleado.getEmpleado().getSecuencia());
-            pathReporteGenerado = administrarGenerarReporte.generarReporte(reporte.getNombrearchivo(), "PDF", parametros);
-            if (pathReporteGenerado != null) {
-                PrimefacesContextUI.ejecutar("validarDescargaReporte();");
-            }else{
-				PrimefacesContextUI.ejecutar("PF('generandoReporte').hide();");
-				MensajesUI.error("El reporte no se pudo generar.");
-			}
+            reportes = administrarGenerarReporte.consultarReporte(reporte.getNombrearchivo(), controladorIngreso.getUsuario(), conexionEmpleado.getFechadesde(), conexionEmpleado.getFechahasta());
+            System.out.println("reportes: " + reportes.size());
+            if (reportes != null && !reportes.isEmpty()) {
+                PrimefacesContextUI.actualizar("principalForm:tblReporte");
+            } else {
+                MensajesUI.error("La consulta no arrojo ningun resultado.");
+            }
         } else {
-            PrimefacesContextUI.ejecutar("PF('generandoReporte').hide();");
             MensajesUI.error("Se generó un error registrando la conexión.");
         }
     }
@@ -94,42 +91,34 @@ public class ControladorGenerarReporte implements Serializable {
         if (validarCampos()) {
             if ((reporte.getNombrearchivo().equalsIgnoreCase("kio_certificadoIngresos") || reporte.getDescripcion().toUpperCase().contains("RETEN"))
                     ? (conexionEmpleado.getFechadesde() != null && conexionEmpleado.getFechahasta() != null) ? validarFechasCertificadoIngresosRetenciones() : true : true) {
-                PrimefacesContextUI.ejecutar("PF('generandoReporte').show();");
-                PrimefacesContextUI.ejecutar("generarReporte();");
+                PrimefacesContextUI.ejecutar("consultarReporte();");
             } else {
                 PrimefacesContextUI.ejecutar("PF('dlgVerificarFechas').show();");
             }
         }
     }
 
-    public void validarDescargaReporte() {
+    public void verReporte(String rutaReporte) {
         RequestContext context = RequestContext.getCurrentInstance();
-        context.execute("PF('generandoReporte').hide();");
-        if (pathReporteGenerado != null && !pathReporteGenerado.startsWith("Error:")) {
-            try {
-                //System.out.println("pathReporteGenerado: " + pathReporteGenerado);
-                File archivo = new File(pathReporteGenerado);
-                fis = new FileInputStream(archivo);
-                reporteGenerado = new DefaultStreamedContent(fis, "application/pdf");
-            } catch (FileNotFoundException ex) {
-                System.out.println(ex.getCause());
-                reporteGenerado = null;
+        pathReporteSeleccionado = rutaReporte;
+
+        try {
+            File archivo = new File(pathReporteSeleccionado);
+            fis = new FileInputStream(archivo);
+            reporteGenerado = new DefaultStreamedContent(fis, "application/pdf");
+        } catch (FileNotFoundException ex) {
+            System.out.println(ex.getCause());
+            reporteGenerado = null;
+        }
+        if (reporteGenerado != null) {
+            if (userAgent.toUpperCase().contains("Mobile".toUpperCase()) || userAgent.toUpperCase().contains("Tablet".toUpperCase())) {
+                context.update("principalForm:dwlReportePDF");
+                context.execute("PF('dwlReportePDF').show();");
+            } else {
+                context.update("principalForm:verReportePDF");
+                context.execute("PF('verReportePDF').show();");
             }
-            if (reporteGenerado != null) {
-                if (userAgent.toUpperCase().contains("Mobile".toUpperCase()) || userAgent.toUpperCase().contains("Tablet".toUpperCase())) {
-                    //System.out.println("Acceso por mobiles.");
-                    context.update("principalForm:dwlReportePDF");
-                    context.execute("PF('dwlReportePDF').show();");
-                } else {
-                    context.update("principalForm:verReportePDF");
-                    context.execute("PF('verReportePDF').show();");
-                }
-                context.execute("validarEnvioCorreo();");
-            }else{
-				context.update("principalForm:errorGenerandoReporte");
-				context.execute("PF('errorGenerandoReporte').show();");
-			}
-            //pathReporteGenerado = null;
+            //context.execute("validarEnvioCorreo();");
         } else {
             context.update("principalForm:errorGenerandoReporte");
             context.execute("PF('errorGenerandoReporte').show();");
@@ -176,7 +165,7 @@ public class ControladorGenerarReporte implements Serializable {
         if (conexionEmpleado.isEnvioCorreo()) {
             if (administrarGenerarReporte.enviarCorreo(conexionEmpleado.getEmpleado().getEmpresa().getSecuencia(), email,
                     "Reporte Kiosko - " + reporte.getDescripcion(), "Mensaje enviado automáticamente, por favor no responda a este correo.",
-                    pathReporteGenerado)) {
+                    pathReporteSeleccionado)) {
                 MensajesUI.info("El reporte ha sido enviado exitosamente.");
                 PrimefacesContextUI.actualizar("principalForm:growl");
             } else {
@@ -212,7 +201,7 @@ public class ControladorGenerarReporte implements Serializable {
 
     public void reiniciarStreamedContent() {
         reporteGenerado = null;
-        pathReporteGenerado = null;
+        pathReporteSeleccionado = null;
     }
 
     public void cerrarControlador() {
@@ -249,23 +238,21 @@ public class ControladorGenerarReporte implements Serializable {
         this.areaDe = areaDe;
     }
 
-    public String getPathReporteGenerado() {
-        return pathReporteGenerado;
-    }
-
     public StreamedContent getReporteGenerado() {
-        FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-        FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Pragma", "no-cache");
-        FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Expires", "0");
-        FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Expires", "Mon, 8 Aug 1980 10:00:00 GMT");
-        try {
-            File archivo = new File(pathReporteGenerado);
-            fis = new FileInputStream(archivo);
-            reporteGenerado = new DefaultStreamedContent(fis, "application/pdf");
-        } catch (Exception e) {
-            reporteGenerado = null;
+        if (pathReporteSeleccionado != null && !pathReporteSeleccionado.isEmpty()) {
+            FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Pragma", "no-cache");
+            FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Expires", "0");
+            FacesContext.getCurrentInstance().getExternalContext().setResponseHeader("Expires", "Mon, 8 Aug 1980 10:00:00 GMT");
+            try {
+                File archivo = new File(pathReporteSeleccionado);
+                fis = new FileInputStream(archivo);
+                reporteGenerado = new DefaultStreamedContent(fis, "application/pdf");
+            } catch (Exception e) {
+                e.printStackTrace();
+                reporteGenerado = null;
+            }
         }
-
         return reporteGenerado;
     }
 
@@ -287,5 +274,9 @@ public class ControladorGenerarReporte implements Serializable {
             conexionEmpleado.setEnvioCorreo(enviocorreo);
             this.enviocorreo = conexionEmpleado.isEnvioCorreo();
         }
+    }
+
+    public List<ReporteGenerado> getReportes() {
+        return reportes;
     }
 }

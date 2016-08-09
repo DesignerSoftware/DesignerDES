@@ -1,6 +1,9 @@
 package co.com.kiosko.administrar.interfaz;
 
+import co.com.kiosko.clasesAyuda.ReporteGenerado;
 import java.math.BigInteger;
+import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -10,7 +13,7 @@ public interface IAdministrarGenerarReporte {
 
     public void obtenerConexion(java.lang.String idSesion);
 
-    public java.lang.String generarReporte(java.lang.String nombreReporte, java.lang.String tipoReporte, java.util.Map parametros);
+    public List<ReporteGenerado> consultarReporte(String nombreDirectorio, String codigoEmpleado, Date fechaDesde, Date fechaHasta);
 
     public boolean modificarConexionKisko(co.com.kiosko.entidades.ConexionesKioskos cnx);
 
