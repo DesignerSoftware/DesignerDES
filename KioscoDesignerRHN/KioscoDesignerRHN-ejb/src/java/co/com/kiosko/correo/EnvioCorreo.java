@@ -1,6 +1,8 @@
 package co.com.kiosko.correo;
 
+import co.com.kiosko.clasesAyuda.ReporteGenerado;
 import co.com.kiosko.entidades.ConfiguracionCorreo;
+import java.util.List;
 import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
@@ -24,7 +26,7 @@ public class EnvioCorreo {
     public EnvioCorreo() {
     }
 
-    public boolean enviarCorreo(ConfiguracionCorreo cfc, String destinatario, String asunto, String mensaje, String pathAdjunto) {
+    public boolean enviarCorreo(ConfiguracionCorreo cfc, String destinatario, String asunto, String mensaje, List<ReporteGenerado> pathArchivos) {
         try {
             // Propiedades de la conexión
             Properties propiedadesConexion = new Properties();
@@ -55,21 +57,19 @@ public class EnvioCorreo {
             BodyPart texto = new MimeBodyPart();
             texto.setText(mensaje);
 
-            //Archivo adjunto
-            BodyPart adjunto = null;
-            if (pathAdjunto != null && !pathAdjunto.isEmpty()) {
-                adjunto = new MimeBodyPart();
-                FileDataSource archivo = new FileDataSource(pathAdjunto);
-                adjunto.setDataHandler(new DataHandler(archivo));
-                adjunto.setFileName(archivo.getFile().getName());
-            }
-
             //Estructura del contenido (Texto y Adjnto)
             MimeMultipart multiParte = new MimeMultipart();
             multiParte.addBodyPart(texto);
-
-            if (adjunto != null) {
-                multiParte.addBodyPart(adjunto);
+            //Archivo adjunto
+            BodyPart adjunto = null;
+            if (pathArchivos != null && !pathArchivos.isEmpty()) {
+                for (ReporteGenerado pathAdjunto : pathArchivos) {
+                    adjunto = new MimeBodyPart();
+                    FileDataSource archivo = new FileDataSource(pathAdjunto.getRuta());
+                    adjunto.setDataHandler(new DataHandler(archivo));
+                    adjunto.setFileName(archivo.getFile().getName());
+                    multiParte.addBodyPart(adjunto);
+                }
             }
 
             // Construimos la estructura del correo final

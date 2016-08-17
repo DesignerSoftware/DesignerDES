@@ -12,13 +12,11 @@ import co.com.kiosko.persistencia.interfaz.IPersistenciaGenerales;
 import co.com.kiosko.correo.EnvioCorreo;
 import co.com.kiosko.reportes.IniciarReporteInterface;
 import java.io.File;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import javax.ejb.EJB;
 import javax.ejb.Stateful;
 import javax.persistence.EntityManager;
@@ -84,10 +82,10 @@ public class AdministrarGenerarReporte implements IAdministrarGenerarReporte {
     }
 
     @Override
-    public boolean enviarCorreo(BigInteger secuenciaEmpresa, String destinatario, String asunto, String mensaje, String pathAdjunto) {
+    public boolean enviarCorreo(BigInteger secuenciaEmpresa, String destinatario, String asunto, String mensaje, List<ReporteGenerado> pathArchivos) {
         ConfiguracionCorreo cc = persistenciaConfiguracionCorreo.consultarConfiguracionServidorCorreo(em, secuenciaEmpresa);
         EnvioCorreo enviarCorreo = new EnvioCorreo();
-        return enviarCorreo.enviarCorreo(cc, destinatario, asunto, mensaje, pathAdjunto);
+        return enviarCorreo.enviarCorreo(cc, destinatario, asunto, mensaje, pathArchivos);
     }
 
     @Override
@@ -95,11 +93,7 @@ public class AdministrarGenerarReporte implements IAdministrarGenerarReporte {
         boolean retorno = false;
         try {
             ConfiguracionCorreo cc = persistenciaConfiguracionCorreo.consultarConfiguracionServidorCorreo(em, secuenciaEmpresa);
-            if (cc.getServidorSmtp().length() != 0) {
-                retorno = true;
-            } else {
-                retorno = false;
-            }
+            retorno = cc != null && cc.getServidorSmtp().length() != 0;
         } catch (NullPointerException npe) {
             retorno = false;
         } catch (Exception e) {

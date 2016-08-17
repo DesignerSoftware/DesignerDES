@@ -7,10 +7,9 @@
     xmlns:f="http://java.sun.com/jsf/core"
     xmlns:p="http://primefaces.org/ui">
     <p:remoteCommand name="consultarReporte" actionListener="#{controladorGenerarReporte.consultarReporte()}" update="tblReporte"/>
-    <p:remoteCommand name="validarEnvioCorreo" actionListener="#{controladorGenerarReporte.validarEnviaCorreo()}"/>
     <p:remoteCommand name="opciones" actionListener="#{controlNavegacion.configuracionAction_OpcionesKiosko}"
                      process="@this" update=":principalForm"/>
-    <p:panel header="Generar reporte - #{controladorGenerarReporte.reporte.descripcion}" style="min-width: 745px;">
+    <p:panel id="pnlReporte" header="Generar reporte - #{controladorGenerarReporte.reporte.descripcion}" style="min-width: 745px;">
         <p:panelGrid styleClass="noBorders" style="padding: 20px">
             <p:row>
                 <p:column rowspan="2">
@@ -27,19 +26,26 @@
                                         pattern="dd/MM/yyyy" mask="true" locale="es"/>
                         </p:panelGrid>
                         <p:panelGrid id="pnlEnvioCorreo" columns="2" styleClass="noBorders">
-                            <p:outputLabel for="enviarCorreo" value="¿Desea enviar el reporte por correo?: " />
-                            <p:selectBooleanCheckbox id="enviarCorreo" value="#{controladorGenerarReporte.enviocorreo}" >
-                                <p:ajax update=":principalForm:pnlEnvioCorreo" />
-                            </p:selectBooleanCheckbox>
                             <p:column>
-                                <p:outputLabel for="correoDestino" value="E-mail: " style="display: #{controladorGenerarReporte.conexionEmpleado.envioCorreo ? '' : 'none'}"/>
-                                <p:inputText id="correoDestino" value="#{controladorGenerarReporte.email}" style="display: #{controladorGenerarReporte.conexionEmpleado.envioCorreo ? '' : 'none'}"/>
+                                <p:outputLabel for="enviarCorreo" value="¿Desea enviar el reporte por correo?: " />
+                            </p:column>
+                            <p:column>
+                                <p:selectBooleanCheckbox id="enviarCorreo" value="#{controladorGenerarReporte.enviocorreo}" >
+                                    <p:ajax update=":principalForm:pnlReporte" />
+                                </p:selectBooleanCheckbox>
+                            </p:column>
+                            <p:column>
+                                <p:outputLabel for="correoDestino" value="E-mail: " rendered="#{controladorGenerarReporte.conexionEmpleado.envioCorreo}"/>
+                                <p:inputText id="correoDestino" value="#{controladorGenerarReporte.email}" rendered="#{controladorGenerarReporte.conexionEmpleado.envioCorreo}"/>
                             </p:column>
                         </p:panelGrid>
 
-                        <p:panelGrid columns="2" styleClass="noBorders" style="float: right">
+                        <p:panelGrid columns="3" styleClass="noBorders" style="float: right">
                             <p:commandButton value="Consultar reporte" icon="ui-icon-gear"
                                              actionListener="#{controladorGenerarReporte.validar()}"/>
+                            <p:commandButton rendered="#{controladorGenerarReporte.enviocorreo}"
+                                             value="Enviar por correo" icon="ui-icon-mail-closed"
+                                             actionListener="#{controladorGenerarReporte.enviarCorreo()}"/>
                             <p:commandButton value="Cancelar" action="opciones" oncomplete="opciones();"
                                              icon="ui-icon-closethick" actionListener="#{controladorGenerarReporte.cerrarControlador()}"/>
                         </p:panelGrid> 
@@ -60,12 +66,20 @@
         <center>
             <div id="tblReporte" style="width: 50%">
                 <p:dataTable id="tblReporte" value="#{controladorGenerarReporte.reportes}" var="reporte"
-                             emptyMessage="Sin reportes">
+                             emptyMessage="Sin reportes."
+                             selection="#{controladorGenerarReporte.reportesEnviar}" rowKey="#{reporte.nombre}">
+                    <p:column rendered="#{controladorGenerarReporte.enviocorreo}"
+                              selectionMode="multiple" style="width:16px;text-align:center"/>
                     <p:column headerText="Nombre archivo">
                         <h:outputText value="#{reporte.nombre}"/>
                     </p:column>
                     <p:column width="35">
                         <p:commandButton icon="ui-icon-search" actionListener="#{controladorGenerarReporte.verReporte(reporte.ruta)}"/>
+                    </p:column>
+                    <p:column width="35">
+                        <p:commandButton icon="ui-icon-arrowthickstop-1-s" ajax="false">
+                            <p:fileDownload value="#{controladorGenerarReporte.descargarArchivo(reporte.nombre, reporte.ruta)}" />
+                        </p:commandButton>
                     </p:column>
                 </p:dataTable>
             </div>

@@ -46,6 +46,7 @@ public class ControladorGenerarReporte implements Serializable {
     private FileInputStream fis;
     private boolean enviocorreo;
     private List<ReporteGenerado> reportes;
+    private List<ReporteGenerado> reportesEnviar;
     private String pathReporteSeleccionado;
     ExternalContext externalContext;
     String userAgent;
@@ -72,15 +73,16 @@ public class ControladorGenerarReporte implements Serializable {
     }
 
     public void consultarReporte() {
+        reportes = null;
+        reportesEnviar = null;
         if (administrarGenerarReporte.modificarConexionKisko(conexionEmpleado)) {
             controladorIngreso.actualizarConexionEmpleado();
             conexionEmpleado = controladorIngreso.getConexionEmpleado();
             reportes = administrarGenerarReporte.consultarReporte(reporte.getNombrearchivo(), controladorIngreso.getUsuario(), conexionEmpleado.getFechadesde(), conexionEmpleado.getFechahasta());
-            System.out.println("reportes: " + reportes.size());
             if (reportes != null && !reportes.isEmpty()) {
                 PrimefacesContextUI.actualizar("principalForm:tblReporte");
             } else {
-                MensajesUI.error("La consulta no arrojo ningun resultado.");
+                MensajesUI.info("La consulta no arrojo ningun resultado.");
             }
         } else {
             MensajesUI.error("Se generó un error registrando la conexión.");
@@ -135,18 +137,17 @@ public class ControladorGenerarReporte implements Serializable {
                 retorno = false;
             }
         } else {
-            MensajesUI.error("Es necesario colocar las fechas.");
+            MensajesUI.error("Es necesario ingresar las fechas.");
             retorno = false;
         }
-        if (retorno) {
+        /*if (retorno) {
             retorno = validarCorreo();
-        }
+        }*/
         return retorno;
     }
 
     public boolean validarCorreo() {
-        if (conexionEmpleado.isEnvioCorreo()) {
-            String PATTERN_EMAIL = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+        String PATTERN_EMAIL = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
                     + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
             Pattern pattern = Pattern.compile(PATTERN_EMAIL);
             Matcher matcher = pattern.matcher(email);
@@ -155,24 +156,7 @@ public class ControladorGenerarReporte implements Serializable {
             } else {
                 MensajesUI.error("Correo inválido, por favor verifique.");
             }
-        } else {
-            return true;
-        }
         return false;
-    }
-
-    public void validarEnviaCorreo() {
-        if (conexionEmpleado.isEnvioCorreo()) {
-            if (administrarGenerarReporte.enviarCorreo(conexionEmpleado.getEmpleado().getEmpresa().getSecuencia(), email,
-                    "Reporte Kiosko - " + reporte.getDescripcion(), "Mensaje enviado automáticamente, por favor no responda a este correo.",
-                    pathReporteSeleccionado)) {
-                MensajesUI.info("El reporte ha sido enviado exitosamente.");
-                PrimefacesContextUI.actualizar("principalForm:growl");
-            } else {
-                MensajesUI.error("No fue posible enviar el correo, por favor comuníquese con soporte.");
-                PrimefacesContextUI.actualizar("principalForm:growl");
-            }
-        }
     }
 
     public boolean validarFechasCertificadoIngresosRetenciones() {
@@ -193,6 +177,45 @@ public class ControladorGenerarReporte implements Serializable {
             }
         }
         return false;
+    }
+
+    public StreamedContent descargarArchivo(String nombre, String rutaReporte) {
+        StreamedContent archivoDescarga = null;
+        if (rutaReporte != null && !rutaReporte.isEmpty()) {
+            ExternalContext ec = FacesContext.getCurrentInstance().getExternalContext();
+            ec.setResponseHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+            ec.setResponseHeader("Pragma", "no-cache");
+            ec.setResponseHeader("Expires", "0");
+            ec.setResponseHeader("Expires", "Mon, 8 Aug 1980 10:00:00 GMT");
+            try {
+                File archivo = new File(rutaReporte);
+                fis = new FileInputStream(archivo);
+                archivoDescarga = new DefaultStreamedContent(fis, "application/pdf", nombre);
+            } catch (Exception e) {
+                e.printStackTrace();
+                archivoDescarga = null;
+            }
+        }
+        return archivoDescarga;
+    }
+
+    public void enviarCorreo() {
+        if (conexionEmpleado.isEnvioCorreo() && validarCorreo()) {
+            if (reportesEnviar != null && !reportesEnviar.isEmpty()) {
+                if (administrarGenerarReporte.enviarCorreo(conexionEmpleado.getEmpleado().getEmpresa().getSecuencia(), email,
+                        "Reporte Kiosko - " + reporte.getDescripcion(), "Mensaje enviado automáticamente, por favor no responda a este correo.",
+                        reportesEnviar)) {
+                    MensajesUI.info("El reporte ha sido enviado exitosamente.");
+                    PrimefacesContextUI.actualizar("principalForm:growl");
+                } else {
+                    MensajesUI.error("No fue posible enviar el correo, por favor comuníquese con soporte.");
+                    PrimefacesContextUI.actualizar("principalForm:growl");
+                }
+            } else {
+                MensajesUI.error("Por favor seleccione al menos un elemento de la lista.");
+                PrimefacesContextUI.actualizar("principalForm:growl");
+            }
+        }
     }
 
     public boolean validarConfigSMTP() {
@@ -278,5 +301,13 @@ public class ControladorGenerarReporte implements Serializable {
 
     public List<ReporteGenerado> getReportes() {
         return reportes;
+    }
+
+    public List<ReporteGenerado> getReportesEnviar() {
+        return reportesEnviar;
+    }
+
+    public void setReportesEnviar(List<ReporteGenerado> reportesEnviar) {
+        this.reportesEnviar = reportesEnviar;
     }
 }

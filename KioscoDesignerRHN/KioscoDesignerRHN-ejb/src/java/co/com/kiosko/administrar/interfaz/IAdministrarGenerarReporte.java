@@ -17,7 +17,7 @@ public interface IAdministrarGenerarReporte {
 
     public boolean modificarConexionKisko(co.com.kiosko.entidades.ConexionesKioskos cnx);
 
-    public boolean enviarCorreo(java.math.BigInteger secuenciaEmpresa, java.lang.String destinatario, java.lang.String asunto, java.lang.String mensaje, java.lang.String pathAdjunto);
+    public boolean enviarCorreo(java.math.BigInteger secuenciaEmpresa, java.lang.String destinatario, java.lang.String asunto, java.lang.String mensaje, List<ReporteGenerado> pathArchivos);
     
     public boolean comprobarConfigCorreo(BigInteger secuenciaEmpresa);
     
